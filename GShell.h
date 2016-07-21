@@ -5,9 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
-/*
 #include <math.h>
-*/
 
 /*----- USER DEFINATIONS -----------------------*/
 #define AXIS_NUM 4
@@ -88,13 +86,14 @@ typedef struct {
     Variable	vars[USER_LEN];
 	Motor 		motors[AXIS_NUM];
 	char		stdio[MESSAGE_LEN];
-	uint8_t selected_coordinate_system;
+	uint8_t 	selected_coordinate_system;
 }Environment;
 
 /*----- USER DEFINED FUNCTIONS ---------------*/
 
 
 void 	GDelay(unsigned int ms);
+void	GDelayus(unsigned int us);
 void	GEnableMotors(void);
 void	GDisableMotors(void);
 void	GSetDir(Environment *env);

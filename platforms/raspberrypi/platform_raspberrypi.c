@@ -80,6 +80,7 @@ void GDisableMotors(){
     return;
 }
 void GDelay (unsigned int ms) { usleep(1000 * ms);}
+void GDelayus (unsigned int us) { usleep(us); }
 
 void GSetDir (Environment *env){
 

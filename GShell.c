@@ -60,8 +60,10 @@ int GParse (Environment *env) {
             double value = (double) atof(numBuffer);
             switch(firstChar){
 
+                // Load value and convert into units mm
                 case 'X': env->registers[X_REGISTER_ADDRESS]=(env->registers[UNIT_REGISTER_ADDRESS])*value; break;
                 case 'Y': env->registers[Y_REGISTER_ADDRESS]=(env->registers[UNIT_REGISTER_ADDRESS])*value; break;
+
                 #if (AXIS_NUM >= 3)
 				case 'Z': env->registers[Z_REGISTER_ADDRESS]=(env->registers[UNIT_REGISTER_ADDRESS])*value; break;
 				#endif
@@ -130,71 +132,78 @@ int GExec(Environment *env) {
         case 0:
             env->registers[F_REGISTER_ADDRESS] = F_MAX;
         case 1:
-            if(env->registers[COORDINATE_REGISTER_ADDRESS] == COORDINATE_ABSOLUTE) {
-                env->motors[0].deltaSteps=(env->motors[0].stepPerMM)*(env->registers[X_REGISTER_ADDRESS] - env->motors[0].position[env->selected_coordinate_system]);
-                env->motors[0].position[env->selected_coordinate_system] = env->registers[X_REGISTER_ADDRESS];
+            // Convert relative coordinate system to absolute coordinate system
+            if(env->registers[COORDINATE_REGISTER_ADDRESS] == COORDINATE_RELATIVE) {
+                env->registers[X_REGISTER_ADDRESS]+=env->motors[0].position[env->selected_coordinate_system];
+                env->registers[Y_REGISTER_ADDRESS]+=env->motors[1].position[env->selected_coordinate_system];
 
-                env->motors[1].deltaSteps=(env->motors[1].stepPerMM)*(env->registers[Y_REGISTER_ADDRESS] - env->motors[1].position[env->selected_coordinate_system]);
-                env->motors[1].position[env->selected_coordinate_system] = env->registers[Y_REGISTER_ADDRESS];
-
-                #if (AXIS_NUM >= 3)
-                env->motors[2].deltaSteps=(env->motors[2].stepPerMM)*(env->registers[Z_REGISTER_ADDRESS] - env->motors[2].position[env->selected_coordinate_system]);
-                env->motors[2].position[env->selected_coordinate_system] = env->registers[Z_REGISTER_ADDRESS];
+                #if (AXIS_NUM >= 3) 
+                env->registers[Z_REGISTER_ADDRESS]+=env->motors[2].position[env->selected_coordinate_system];
                 #endif
 
-                #if (AXIS_NUM >= 4)
-                env->motors[3].deltaSteps=(env->motors[3].stepPerMM)*(env->registers[A_REGISTER_ADDRESS] - env->motors[3].position[env->selected_coordinate_system]);
-                env->motors[3].position[env->selected_coordinate_system] = env->registers[A_REGISTER_ADDRESS];
+                #if (AXIS_NUM >= 4) 
+                env->registers[A_REGISTER_ADDRESS]+=env->motors[3].position[env->selected_coordinate_system];
                 #endif
 
-                #if (AXIS_NUM >= 5)
-                env->motors[4].deltaSteps=(env->motors[4].stepPerMM)*(env->registers[B_REGISTER_ADDRESS] - env->motors[4].position[env->selected_coordinate_system]);
-                env->motors[4].position[env->selected_coordinate_system] = env->registers[B_REGISTER_ADDRESS];
+                #if (AXIS_NUM >= 5) 
+                env->registers[B_REGISTER_ADDRESS]+=env->motors[4].position[env->selected_coordinate_system];
                 #endif
 
-                #if (AXIS_NUM >= 6)
-                env->motors[5].deltaSteps=(env->motors[5].stepPerMM)*(env->registers[C_REGISTER_ADDRESS] - env->motors[5].position[env->selected_coordinate_system]);
-                env->motors[5].position[env->selected_coordinate_system] = env->registers[C_REGISTER_ADDRESS];
+                #if (AXIS_NUM >= 6) 
+                env->registers[C_REGISTER_ADDRESS]+=env->motors[5].position[env->selected_coordinate_system];
                 #endif
-
             }
 
-            else {
-                env->motors[0].deltaSteps=(env->motors[0].stepPerMM)*(env->registers[X_REGISTER_ADDRESS]);
-                env->motors[0].position[env->selected_coordinate_system] += env->registers[X_REGISTER_ADDRESS];
-                env->registers[X_REGISTER_ADDRESS]=0;
+            env->motors[0].deltaSteps=(env->motors[0].stepPerMM)*(env->registers[X_REGISTER_ADDRESS] - env->motors[0].position[env->selected_coordinate_system]);
+            env->motors[0].position[env->selected_coordinate_system] = env->registers[X_REGISTER_ADDRESS];
 
-                env->motors[1].deltaSteps=(env->motors[1].stepPerMM)*(env->registers[Y_REGISTER_ADDRESS]);
-                env->motors[1].position[env->selected_coordinate_system] += env->registers[Y_REGISTER_ADDRESS];
+            env->motors[1].deltaSteps=(env->motors[1].stepPerMM)*(env->registers[Y_REGISTER_ADDRESS] - env->motors[1].position[env->selected_coordinate_system]);
+            env->motors[1].position[env->selected_coordinate_system] = env->registers[Y_REGISTER_ADDRESS];
+
+            #if (AXIS_NUM >= 3)
+            env->motors[2].deltaSteps=(env->motors[2].stepPerMM)*(env->registers[Z_REGISTER_ADDRESS] - env->motors[2].position[env->selected_coordinate_system]);
+            env->motors[2].position[env->selected_coordinate_system] = env->registers[Z_REGISTER_ADDRESS];
+            #endif
+
+            #if (AXIS_NUM >= 4)
+            env->motors[3].deltaSteps=(env->motors[3].stepPerMM)*(env->registers[A_REGISTER_ADDRESS] - env->motors[3].position[env->selected_coordinate_system]);
+            env->motors[3].position[env->selected_coordinate_system] = env->registers[A_REGISTER_ADDRESS];
+            #endif
+
+            #if (AXIS_NUM >= 5)
+            env->motors[4].deltaSteps=(env->motors[4].stepPerMM)*(env->registers[B_REGISTER_ADDRESS] - env->motors[4].position[env->selected_coordinate_system]);
+            env->motors[4].position[env->selected_coordinate_system] = env->registers[B_REGISTER_ADDRESS];
+            #endif
+
+            #if (AXIS_NUM >= 6)
+            env->motors[5].deltaSteps=(env->motors[5].stepPerMM)*(env->registers[C_REGISTER_ADDRESS] - env->motors[5].position[env->selected_coordinate_system]);
+            env->motors[5].position[env->selected_coordinate_system] = env->registers[C_REGISTER_ADDRESS];
+            #endif
+
+            GLinearMotion(env);
+
+            if(env->registers[COORDINATE_REGISTER_ADDRESS] == COORDINATE_RELATIVE) {
+                env->registers[X_REGISTER_ADDRESS]=0;
                 env->registers[Y_REGISTER_ADDRESS]=0;
 
                 #if (AXIS_NUM >= 3)
-                env->motors[2].deltaSteps=(env->motors[2].stepPerMM)*(env->registers[Z_REGISTER_ADDRESS]);
-                env->motors[2].position[env->selected_coordinate_system] += env->registers[Z_REGISTER_ADDRESS];
                 env->registers[Z_REGISTER_ADDRESS]=0;
                 #endif
 
                 #if (AXIS_NUM >= 4)
-                env->motors[3].deltaSteps=(env->motors[3].stepPerMM)*(env->registers[A_REGISTER_ADDRESS]);
-                env->motors[3].position[env->selected_coordinate_system] += env->registers[A_REGISTER_ADDRESS];
                 env->registers[A_REGISTER_ADDRESS]=0;
                 #endif
 
                 #if (AXIS_NUM >= 5)
-                env->motors[4].deltaSteps=(env->motors[4].stepPerMM)*(env->registers[B_REGISTER_ADDRESS]);
-                env->motors[4].position[env->selected_coordinate_system] += env->registers[B_REGISTER_ADDRESS];
                 env->registers[B_REGISTER_ADDRESS]=0;
                 #endif
 
                 #if (AXIS_NUM >= 6)
-                env->motors[5].deltaSteps=(env->motors[5].stepPerMM)*(env->registers[C_REGISTER_ADDRESS]);
-                env->motors[5].position[env->selected_coordinate_system] += env->registers[C_REGISTER_ADDRESS];
                 env->registers[C_REGISTER_ADDRESS]=0;
                 #endif
 
             }
 
-            GLinearMotion(env);
 			break;
 
         case 2:
@@ -294,34 +303,71 @@ int GExec(Environment *env) {
 
 
 static int max(int a, int b) {if(a>=b)return a;else return b;}
+
 void GLinearMotion(Environment *env)
 {
 
-	unsigned int  i,k,intstep[AXIS_NUM];
+	unsigned int  i,k;
 	float m[AXIS_NUM], steps[AXIS_NUM];
-
+    
 	//ENABLE MOTORS
 	GEnableMotors();
 	//Set direction of motors
 	GSetDir(env);
-	//Calculate max step
-	//int max_delta = env->motors[0].deltaSteps >= env->motors[1].deltaSteps ? env->motors[0].deltaSteps : env->motors[1].deltaSteps;
-	int max_delta = max(env->motors[0].deltaSteps, env->motors[1].deltaSteps);
-	max_delta = max(env->motors[2].deltaSteps, max_delta);
-    if (max_delta == 0) return;
 
+	//Calculate max step
+    unsigned int max_delta = max(env->motors[0].deltaSteps, env->motors[1].deltaSteps);
+
+    #if (AXIS_NUM >= 3)
+	max_delta = max(env->motors[2].deltaSteps, max_delta);
+    #endif
+
+    #if (AXIS_NUM >= 4)
+	max_delta = max(env->motors[3].deltaSteps, max_delta);
+    #endif
+
+    #if (AXIS_NUM >= 5)
+	max_delta = max(env->motors[4].deltaSteps, max_delta);
+    #endif
+
+    #if (AXIS_NUM >= 6)
+	max_delta = max(env->motors[5].deltaSteps, max_delta);
+    #endif
+
+    if (max_delta == 0) return;
+    
+    // Clear steps variable
     for(i=0;i<AXIS_NUM;i++) steps[i]=0;
 
+    // Calculate Slope
 	for(i=0;i<AXIS_NUM;i++) m[i]=(float)env->motors[i].deltaSteps/(float)max_delta;
 
+    // Calculate delay time
+    // F[mm/dk]/60=F[mm/sn]
+    // time [sn] = Way / F[mm/sn]
+    // Way =  sqrt (x^2+y^2+z^2) -- don't calculate  A,B,C Axis
+    // time [sn] = sqrt(x^2+y^2+z^2) / F[mm/sn]
+    // delay time [us] = sqrt(x^2+y^2+z^2) / F[mm/sn] / max_delta * 1.000.000
+    uint16_t delay_time = (uint16_t) (sqrt(env->registers[X_REGISTER_ADDRESS]*env->registers[X_REGISTER_ADDRESS] + 
+    env->registers[Y_REGISTER_ADDRESS]*env->registers[Y_REGISTER_ADDRESS]+
+    env->registers[Z_REGISTER_ADDRESS]*env->registers[Z_REGISTER_ADDRESS]) / (double)(env->registers[F_REGISTER_ADDRESS]) / 
+    (double)max_delta * 1000000.0);
+
 	for (k = 0;k < max_delta;k++){
+
+        // Add slope to steps
 		for(i=0;i<AXIS_NUM;i++) steps[i] += m[i];
-		// Round float
-		for(i=0;i<AXIS_NUM;i++) {if ((int) (steps[i] + 0.5) >= 1)env->motors[i].step =true, steps[i]-=1;
-        else env->motors[i].step =false;}
+
+		// For All Axis
+		for(i=0;i<AXIS_NUM;i++) {
+            // Round float and motor.step > 1 step
+            if ((int) (steps[i] + 0.5) >= 1)env->motors[i].step =true, steps[i]-=1;
+            else env->motors[i].step =false;
+        }
+
 		GStepper(env);
-		//GDelay(1);
+
+		GDelayus(1);
 	}
-    for(i=0;i<AXIS_NUM;i++) env->motors[i].deltaSteps=0;
 	GDisableMotors();
 }
