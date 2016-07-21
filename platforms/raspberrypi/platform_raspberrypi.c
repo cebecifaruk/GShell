@@ -90,31 +90,17 @@ void GSetDir (Environment *env){
 	if(env->motors[2].deltaSteps >= 0) bcm2835_gpio_clr(Z_DIR);
 	else {bcm2835_gpio_set(Z_DIR);env->motors[2].deltaSteps*=-1;}
 }
-void GStepper(unsigned int step[AXIS_NUM])
+void GStepper(Environment *env)
 {
-	unsigned int k;
 	// X Axis
-
-	for(k=0;k<step[0];k++){
-		bcm2835_gpio_set(X_STEP);
-		bcm2835_delayMicroseconds (200);
-		bcm2835_gpio_clr(X_STEP);
-		bcm2835_delayMicroseconds (200);
-	}
-
-	for(k=0;k<step[1];k++){
-		bcm2835_gpio_set(Y_STEP);
-		bcm2835_delayMicroseconds (200);
-		bcm2835_gpio_clr(Y_STEP);
-		bcm2835_delayMicroseconds (200);
-	}
-
-	for(k=0;k<step[2];k++){
-		bcm2835_gpio_set(Z_STEP);
-		bcm2835_delayMicroseconds (200);
-		bcm2835_gpio_clr(Z_STEP);
-		bcm2835_delayMicroseconds (200);
-	}
+    if(env->motors[0].step)	bcm2835_gpio_set(X_STEP);
+    if(env->motors[1].step)	bcm2835_gpio_set(Y_STEP);
+    if(env->motors[2].step)	bcm2835_gpio_set(Z_STEP);
+	bcm2835_delayMicroseconds (200);
+	bcm2835_gpio_clr(X_STEP);
+    bcm2835_gpio_clr(Y_STEP);
+    bcm2835_gpio_clr(Z_STEP);
+    bcm2835_delayMicroseconds (200);
 
 }
 void init() {
@@ -148,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         if(fp==NULL) printf(">> "),gets(env.stdio);
-        else if (fgets(env.stdio,150, fp) == NULL) break;
+        else if (fgets(env.stdio,MESSAGE_LEN, fp) == NULL) break;
         GParse(&env);
         puts(env.stdio);
         GDisableMotors();

@@ -293,7 +293,7 @@ int GExec(Environment *env) {
 }
 
 
-int max(int a, int b) {if(a>=b)return a;else return b;}
+static int max(int a, int b) {if(a>=b)return a;else return b;}
 void GLinearMotion(Environment *env)
 {
 
@@ -309,15 +309,19 @@ void GLinearMotion(Environment *env)
 	int max_delta = max(env->motors[0].deltaSteps, env->motors[1].deltaSteps);
 	max_delta = max(env->motors[2].deltaSteps, max_delta);
     if (max_delta == 0) return;
-	for(i=0;i<AXIS_NUM;i++) m[i]=(float)env->motors[i].deltaSteps/(float)max_delta;
 
+    for(i=0;i<AXIS_NUM;i++) steps[i]=0;
+
+	for(i=0;i<AXIS_NUM;i++) m[i]=(float)env->motors[i].deltaSteps/(float)max_delta;
 
 	for (k = 0;k < max_delta;k++){
 		for(i=0;i<AXIS_NUM;i++) steps[i] += m[i];
 		// Round float
-		for(i=0;i<AXIS_NUM;i++) {intstep[i] = (int) (steps[i] + 0.5); steps[i]-=intstep[i];}
-		GStepper(intstep);
+		for(i=0;i<AXIS_NUM;i++) {if ((int) (steps[i] + 0.5) >= 1)env->motors[i].step =true, steps[i]-=1;
+        else env->motors[i].step =false;}
+		GStepper(env);
 		//GDelay(1);
 	}
+    for(i=0;i<AXIS_NUM;i++) env->motors[i].deltaSteps=0;
 	GDisableMotors();
 }

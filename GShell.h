@@ -14,7 +14,7 @@
 #define F_MAX 1000
 
 #define USER_LEN 1
-#define MESSAGE_LEN 50
+#define MESSAGE_LEN 100
 #define USE_DDA_ALGORITHM
 #define COORDINATE_MEM_LEN 2
 
@@ -69,6 +69,8 @@
 
 
 /*----- Types ----------------------------------*/
+typedef enum {false = 0,true = 1}bool;
+
 typedef struct {
 	char		*name;
 	float		data;
@@ -78,6 +80,7 @@ typedef struct {
 	int32_t 	deltaSteps;
 	uint8_t 	stepPerMM;
 	float	position[COORDINATE_MEM_LEN];
+	bool 	step;
 }Motor;
 
 typedef struct {
@@ -95,7 +98,7 @@ void 	GDelay(unsigned int ms);
 void	GEnableMotors(void);
 void	GDisableMotors(void);
 void	GSetDir(Environment *env);
-void	GStepper(unsigned int [AXIS_NUM]);
+void	GStepper(Environment *env);
 
 /*----- GSHELL FUNCTIONS --------------------*/
 
